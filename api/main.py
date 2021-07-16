@@ -33,12 +33,28 @@ def get_db():
         db.close()
 
 @app.get("/information/")
-def get_information(db: Session = Depends(get_db)):
-    return queries.get_information(db)
+def get_information(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
+    return queries.get_information(db, offset, limit)
 
-@app.get("/vaccines/")
-def home(db: Session = Depends(get_db)):
-    return queries.get_vaccines_per_day(db)
+@app.get("/vaccines")
+def vaccines(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
+    return queries.get_vaccines(db, offset, limit)
+
+@app.get("/vaccines/date")
+def vaccines_per_day(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
+    return queries.get_vaccines_per_day(db, offset, limit)
+
+@app.get("/province/")
+def provinces(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
+    return queries.get_provinces(db, offset, limit)
+
+@app.get("/province/{province}/vaccines")
+def vaccines_by_province(province: str, db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
+    return queries.get_vaccines_by_province(db, province, offset, limit)
+
+@app.get("/province/{province}/vaccines/date")
+def vaccines_per_day_by_province(province: str, db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
+    return queries.get_vaccines_per_day_by_province(db, province, offset, limit)
 
 @app.post("/update/", responses={512: {"model": Message}})
 def update():
