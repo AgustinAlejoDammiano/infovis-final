@@ -41,6 +41,26 @@ def get_vaccines_per_day(db: Session, offset: int, limit: int):
     )
     return res.mappings().all()
 
+def get_vaccines_per_province(db: Session, offset: int, limit: int):
+    res = db.execute(
+        "with primerasDosis as (\
+            select jurisdiccion_aplicacion, count(*) as totalVacunas\
+            from nomivac_covid19\
+            where orden_dosis = 1 and fecha_aplicacion != 'S.I.'\
+            group by jurisdiccion_aplicacion\
+        ),\
+        segundasDosis as (\
+            select jurisdiccion_aplicacion, count(*) as totalVacunas\
+            from nomivac_covid19\
+            where orden_dosis = 2 and fecha_aplicacion != 'S.I.'\
+            group by jurisdiccion_aplicacion\
+        )\
+        select primerasDosis.jurisdiccion_aplicacion as province, primerasDosis.totalVacunas as firstDoseQuantity, segundasDosis.totalVacunas as secondDoseQuantity, primerasDosis.totalVacunas + segundasDosis.totalVacunas as totalVaccines\
+        from primerasDosis join segundasDosis on primerasDosis.jurisdiccion_aplicacion = segundasDosis.jurisdiccion_aplicacion\
+        limit " + str(limit) + " offset " + str(offset)
+    )
+    return res.mappings().all()
+
 def get_provinces(db: Session, offset: int, limit: int):
     res = db.execute(
         "select jurisdiccion_aplicacion as name\

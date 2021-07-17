@@ -44,6 +44,10 @@ def vaccines(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
 def vaccines_per_day(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
     return queries.get_vaccines_per_day(db, offset, limit)
 
+@app.get("/vaccines/province")
+def vaccines_per_province(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
+    return queries.get_vaccines_per_province(db, offset, limit)
+
 @app.get("/province/")
 def provinces(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
     return queries.get_provinces(db, offset, limit)
