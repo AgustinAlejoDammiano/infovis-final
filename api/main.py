@@ -60,6 +60,14 @@ def vaccines_by_province(province: str, db: Session = Depends(get_db), offset: i
 def vaccines_per_day_by_province(province: str, db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
     return queries.get_vaccines_per_day_by_province(db, province, offset, limit)
 
+@app.get("/type/")
+def types(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
+    return queries.get_types(db, offset, limit)
+
+@app.get("/condition/")
+def types(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
+    return queries.get_conditions(db, offset, limit)
+
 @app.post("/update/", responses={512: {"model": Message}})
 def update():
     url = 'https://sisa.msal.gov.ar/datos/descargas/covid-19/files/datos_nomivac_covid19.zip'

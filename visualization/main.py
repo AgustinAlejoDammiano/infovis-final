@@ -30,15 +30,44 @@ choro_data = alt.Data(values=choro_json['features'])
 choropleth = alt.Chart(choro_data, title='Vacunados por provincia')\
     .mark_geoshape(stroke='black',strokeWidth=1)\
     .encode(color=alt.Color("properties['Total']", type='quantitative', scale=alt.Scale(scheme='bluegreen', type='log'), title = 'Total'),
-            tooltip=[alt.Tooltip("properties['province']:N", title='provincia'), alt.Tooltip("properties['Primera Dosis']:Q", title='Vacunados Primera Dosis'), 
-                     alt.Tooltip("properties['Segunda Dosis']:Q", title='Vacunados Segunda Dosis'), alt.Tooltip("properties['Total']:Q", title='Total Vacunados')])
+            tooltip=[alt.Tooltip("properties['province']:N", title='Provincia'), alt.Tooltip("properties['Primera Dosis']:Q", title='Vacunados Primera Dosis'), 
+                     alt.Tooltip("properties['Segunda Dosis']:Q", title='Vacunados Segunda Dosis'), alt.Tooltip("properties['Total']:Q", title='Total Vacunados')])\
+    .properties(height=500)
 
 bar_chart = alt.Chart(data_df, title='Vacunados por provincia')\
     .mark_bar()\
     .transform_fold(['Primera Dosis', 'Segunda Dosis'], as_=['Dosis', 'Vacunados'])\
     .encode(x='Vacunados:Q', y=alt.Y('province:N', sort='-x'), color=alt.Color('Dosis:N', scale=alt.Scale(domain=['Primera Dosis','Segunda Dosis'], range=['#ffa600','#006400'])),
-            tooltip=['Dosis:N', alt.Tooltip('Vacunados:Q', title='Vacunados'), alt.Tooltip('Total:Q', title='Total Vacunados')])
+            tooltip=[alt.Tooltip('Vacunados:Q', title='Vacunados'), alt.Tooltip('Total:Q', title='Total Vacunados')])
 
-dashboard = alt.vconcat(areaPlot, choropleth, bar_chart)
+with urllib.request.urlopen("http://localhost:5000/type?limit=1000") as url:
+    type_vaccine = json.loads(url.read())
 
-dashboard.serve()
+df = pd.DataFrame(type_vaccine).rename(columns={"name": "Tipo", "vaccinequantity": "Cantidad"})
+total = df['Cantidad'].sum()
+df["Porcentaje"] = df["Cantidad"] / total
+
+bar_chart_type = alt.Chart(df, title='Tipos de vacunas')\
+    .mark_bar()\
+    .encode(x=alt.X('Cantidad:Q', axis=None), color=alt.Color('Tipo:N', legend=alt.Legend(orient='top', direction="horizontal")), 
+            tooltip=[alt.Tooltip('Cantidad:Q', title='Cantidad de vacunas'), alt.Tooltip('Porcentaje:Q', title='Porcentaje', format='.1%')])\
+    .properties(width=1000)
+
+with urllib.request.urlopen("http://localhost:5000/condition?limit=1000") as url:
+    condition_vaccine = json.loads(url.read())
+
+df = pd.DataFrame(condition_vaccine).rename(columns={"name": "Condicion", "vaccinequantity": "Cantidad"})
+total = df['Cantidad'].sum()
+df["Porcentaje"] = df["Cantidad"] / total
+
+bar_chart_condition = alt.Chart(df, title='Codiciones de personas vacunadas')\
+    .mark_bar()\
+    .encode(x=alt.X('Cantidad:Q', axis=None), color=alt.Color('Condicion:N', legend=alt.Legend(orient='top', direction="horizontal", columns=5, labelLimit=300)), 
+            tooltip=[alt.Tooltip('Cantidad:Q', title='Cantidad de vacunas'), alt.Tooltip('Porcentaje:Q', title='Porcentaje', format='.1%')])\
+    .properties(width=1000)
+
+dashboard = (areaPlot & (choropleth | bar_chart) & bar_chart_type & bar_chart_condition)\
+    .resolve_scale(color='independent')\
+    .configure_view(stroke=None)
+
+dashboard.show()

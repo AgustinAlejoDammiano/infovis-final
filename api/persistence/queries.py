@@ -63,7 +63,7 @@ def get_vaccines_per_province(db: Session, offset: int, limit: int):
 
 def get_provinces(db: Session, offset: int, limit: int):
     res = db.execute(
-        "select jurisdiccion_aplicacion as name\
+        "select jurisdiccion_aplicacion as name, count(*) as vaccineQuantity\
          from nomivac_covid19\
          group by jurisdiccion_aplicacion\
          limit " + str(limit) + " offset " + str(offset)
@@ -96,5 +96,24 @@ def get_vaccines_per_day_by_province(db: Session, province: str, offset: int, li
         select primerasDosis.fecha_appl as date, primerasDosis.totalVacunas as firstDoseQuantity, segundasDosis.totalVacunas as secondDoseQuantity, primerasDosis.totalVacunas + segundasDosis.totalVacunas as totalVaccines\
         from primerasDosis join segundasDosis on primerasDosis.fecha_appl = segundasDosis.fecha_appl\
         limit " + str(limit) + " offset " + str(offset)
+    )
+    return res.mappings().all()
+
+def get_types(db: Session, offset: int, limit: int):
+    res = db.execute(
+        "select vacuna as name, count(*) as vaccineQuantity\
+         from nomivac_covid19\
+         group by vacuna\
+         limit " + str(limit) + " offset " + str(offset)
+    )
+    return res.mappings().all()
+
+
+def get_conditions(db: Session, offset: int, limit: int):
+    res = db.execute(
+        "select condicion_aplicacion as name, count(*) as vaccineQuantity\
+         from nomivac_covid19\
+         group by condicion_aplicacion\
+         limit " + str(limit) + " offset " + str(offset)
     )
     return res.mappings().all()
