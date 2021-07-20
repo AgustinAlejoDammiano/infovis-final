@@ -104,9 +104,25 @@ def vaccines_per_day_by_province(province: str, db: Session = Depends(get_db), o
 def types(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
     return queries.get_types(db, offset, limit)
 
+@app.get("/type/{vaccine_type}/vaccines", tags=["Type"], response_model=List[Vaccine])
+def vaccines_by_type(vaccine_type: str, db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
+    return queries.get_vaccines_by_type(db, vaccine_type, offset, limit)
+
+@app.get("/type/{vaccine_type}/vaccines/date", tags=["Type"], response_model=List[Date])
+def vaccines_per_day_by_type(vaccine_type: str, db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
+    return queries.get_vaccines_per_day_by_type(db, vaccine_type, offset, limit)
+
 @app.get("/condition/", tags=["Condition"], response_model=List[Entity])
 def condition(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
     return queries.get_conditions(db, offset, limit)
+
+@app.get("/condition/{condition}/vaccines", tags=["Condition"], response_model=List[Vaccine])
+def vaccines_by_condition(condition: str, db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
+    return queries.get_vaccines_by_condition(db, condition, offset, limit)
+
+@app.get("/condition/{condition}/vaccines/date", tags=["Condition"], response_model=List[Date])
+def vaccines_per_day_by_condition(condition: str, db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
+    return queries.get_vaccines_per_day_by_condition(db, condition, offset, limit)
 
 @app.post("/update/", responses={512: {"model": Message}}, tags=["Database"])
 def update():
