@@ -6,7 +6,7 @@ from . import models
 
 def get_information(db: Session, offset: int, limit: int):
     res = db.execute(
-        "select *\
+        "select last_update as lastUpdate\
          from information\
          order by last_update DESC \
          limit " + str(limit) + " offset " + str(offset)
@@ -72,7 +72,7 @@ def get_provinces(db: Session, offset: int, limit: int):
 
 def get_vaccines_by_province(db: Session, province: str, offset: int, limit: int):
     res = db.execute(
-        "select *\
+        "select select sexo as sex, jurisdiccion_aplicacion as province, condicion_aplicacion as condition, vacuna as vaccine, lote_vacuna as lot\
          from nomivac_covid19\
          where jurisdiccion_aplicacion = '" + province + "'\
          limit " + str(limit) + " offset " + str(offset)

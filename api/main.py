@@ -7,8 +7,22 @@ import requests, zipfile, io
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from typing import List
+from datetime import date
 
-app = FastAPI()
+tags = [
+    {"name": "Database", "description": "Interact with the database."},
+    {"name": "Vaccine", "description": "Endpoints aboute the vaccination."},
+    {"name": "Province", "description": "Endpoints aboute the Province of Argentina."},
+    {"name": "Type", "description": "Endpoints aboute the type of vaccine."},
+    {"name": "Condition", "description": "Endpoints aboute the vaccination condition."}
+]
+
+app = FastAPI(
+    title="Vaccines Argentina COVID19",
+    description="API that provides information about the vacunation in Argentina for COVID19",
+    openapi_tags=tags
+)
 
 origins = [
     "*",
@@ -25,6 +39,32 @@ app.add_middleware(
 class Message(BaseModel):
     message: str
 
+class Information(BaseModel):
+    information: str
+
+class Date(BaseModel):
+    date: date
+    firstdosequantity: int
+    seconddosequantity: int
+    totalvaccines: int
+
+class Province(BaseModel):
+    province: str
+    firstdosequantity: int
+    seconddosequantity: int
+    totalvaccines: int
+
+class Vaccine(BaseModel):
+    sex: str
+    province: str
+    condition: str
+    vaccine: str
+    lot: str
+
+class Entity(BaseModel):
+    name: str
+    vaccinequantity: int
+
 def get_db():
     db = SessionLocal()
     try:
@@ -32,43 +72,43 @@ def get_db():
     finally:
         db.close()
 
-@app.get("/information/")
-def get_information(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
+@app.get("/information/", tags=["Database"], response_model=List[Information])
+def information(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
     return queries.get_information(db, offset, limit)
 
-@app.get("/vaccines")
+@app.get("/vaccines", tags=["Vaccine"], response_model=List[Vaccine])
 def vaccines(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
     return queries.get_vaccines(db, offset, limit)
 
-@app.get("/vaccines/date")
+@app.get("/vaccines/date", tags=["Vaccine"], response_model=List[Date])
 def vaccines_per_day(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
     return queries.get_vaccines_per_day(db, offset, limit)
 
-@app.get("/vaccines/province")
+@app.get("/vaccines/province", tags=["Vaccine"], response_model=List[Province])
 def vaccines_per_province(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
     return queries.get_vaccines_per_province(db, offset, limit)
 
-@app.get("/province/")
+@app.get("/province/", tags=["Province"], response_model=List[Entity])
 def provinces(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
     return queries.get_provinces(db, offset, limit)
 
-@app.get("/province/{province}/vaccines")
+@app.get("/province/{province}/vaccines", tags=["Province"], response_model=List[Vaccine])
 def vaccines_by_province(province: str, db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
     return queries.get_vaccines_by_province(db, province, offset, limit)
 
-@app.get("/province/{province}/vaccines/date")
+@app.get("/province/{province}/vaccines/date", tags=["Province"], response_model=List[Date])
 def vaccines_per_day_by_province(province: str, db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
     return queries.get_vaccines_per_day_by_province(db, province, offset, limit)
 
-@app.get("/type/")
+@app.get("/type/", tags=["Type"], response_model=List[Entity])
 def types(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
     return queries.get_types(db, offset, limit)
 
-@app.get("/condition/")
-def types(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
+@app.get("/condition/", tags=["Condition"], response_model=List[Entity])
+def condition(db: Session = Depends(get_db), offset: int = 0, limit: int = 10):
     return queries.get_conditions(db, offset, limit)
 
-@app.post("/update/", responses={512: {"model": Message}})
+@app.post("/update/", responses={512: {"model": Message}}, tags=["Database"])
 def update():
     url = 'https://sisa.msal.gov.ar/datos/descargas/covid-19/files/datos_nomivac_covid19.zip'
     try:
